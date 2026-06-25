@@ -31,13 +31,7 @@ app.get("/session", session);
 app.post("/logout", logout);
 app.use("/api", cargoRoutes);
 
-const spaRoutes = new Set(["/", "/login", "/dashboard"]);
-
 app.use((req, res) => {
-  if (req.method === "GET" && spaRoutes.has(req.path)) {
-    return res.redirect(`http://localhost:5173${req.originalUrl}`);
-  }
-
   const apiRoutes = ["/api", "/login", "/signup", "/session", "/logout"];
   const isApiRoute = apiRoutes.some((route) => req.path.startsWith(route));
 
@@ -47,7 +41,6 @@ app.use((req, res) => {
 
   return res.redirect("http://localhost:5173");
 });
-
 const port = Number(process.env.PORT) || 3001;
 
 if (require.main === module) {
