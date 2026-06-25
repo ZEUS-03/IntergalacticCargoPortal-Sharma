@@ -12,7 +12,7 @@ npm install
 3. Start the backend:
 
 ```bash
-npm start
+npm run dev
 ```
 
 The frontend Vite proxy is configured for `http://localhost:3001`. If you want the full app to work locally without changing the proxy, set `PORT=3001` in `backend/.env` before starting the server.
