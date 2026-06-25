@@ -7,6 +7,17 @@ const db = require("./db");
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SALT_ROUNDS = 10;
 
+function cookieOptions() {
+  const isProduction = process.env.NODE_ENV === "production";
+  return {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isProduction,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    path: "/",
+  };
+}
+
 function normalizeEmail(email) {
   return typeof email === "string" ? email.trim().toLowerCase() : "";
 }
@@ -51,6 +62,18 @@ function signup(req, res) {
       "INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)",
     );
     const result = insert.run(email, passwordHash, role);
+
+    const token = jwt.sign(
+      {
+        userId: Number(result.lastInsertRowid),
+        email,
+        role,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    res.cookie("icp_token", token, cookieOptions());
 
     return res.status(201).json({
       userId: Number(result.lastInsertRowid),
@@ -105,14 +128,50 @@ function login(req, res) {
       { expiresIn: "7d" },
     );
 
-    return res.status(200).json({ token });
+    res.cookie("icp_token", token, cookieOptions());
+
+    return res.status(200).json({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    });
   } catch (error) {
     console.error("login failed:", error);
     return res.status(500).json({ message: "internal server error" });
   }
 }
 
+function session(req, res) {
+  try {
+    const token = req.cookies?.icp_token;
+    if (!token) {
+      return res.status(401).json({ message: "unauthenticated" });
+    }
+
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      return res.status(500).json({ message: "JWT_SECRET is not configured" });
+    }
+
+    const payload = jwt.verify(token, secret);
+    return res.status(200).json({
+      userId: payload.userId,
+      email: payload.email,
+      role: payload.role,
+    });
+  } catch (error) {
+    return res.status(401).json({ message: "unauthenticated" });
+  }
+}
+
+function logout(req, res) {
+  res.clearCookie("icp_token", { path: "/" });
+  return res.status(200).json({ message: "logged out" });
+}
+
 module.exports = {
   signup,
   login,
+  session,
+  logout,
 };
