@@ -4,9 +4,28 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
+    historyApiFallback: true,
     proxy: {
-      "/api": "http://localhost:3001",
+      "/api": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+      },
+      "/login": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+      },
+      "/signup": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+      },
+      "/session": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+      },
+      "/logout": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+      },
     },
   },
 });

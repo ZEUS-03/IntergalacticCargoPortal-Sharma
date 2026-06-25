@@ -95,17 +95,21 @@ router.post(
       const manifest = req.file.buffer.toString("utf8");
       const lines = manifest.split(/\r?\n/);
       const insertCargo = db.prepare(
-        "INSERT INTO cargo (cargo_id, date, weight_kg, destination) VALUES (?, ?, ?, ?)",
+        "INSERT OR IGNORE INTO cargo (cargo_id, date, weight_kg, destination) VALUES (?, ?, ?, ?)",
       );
       const insertMany = db.transaction((records) => {
+        let insertedCount = 0;
         for (const record of records) {
-          insertCargo.run(
+          const result = insertCargo.run(
             record.cargoId,
             record.date,
             record.weightKg,
             record.destination,
           );
+          insertedCount += result.changes;
         }
+
+        return insertedCount;
       });
 
       const recordsToSave = [];
@@ -129,12 +133,12 @@ router.post(
         });
       }
 
-      if (recordsToSave.length > 0) {
-        insertMany(recordsToSave);
-      }
+      const insertedCount =
+        recordsToSave.length > 0 ? insertMany(recordsToSave) : 0;
 
       return res.status(201).json({
-        saved: recordsToSave.length,
+        saved: insertedCount,
+        skippedDuplicates: recordsToSave.length - insertedCount,
       });
     } catch (error) {
       console.error("cargo upload failed:", error);
