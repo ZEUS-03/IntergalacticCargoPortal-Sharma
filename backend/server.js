@@ -9,6 +9,7 @@ const result = dotenv.config({ path: path.join(__dirname, ".env") });
 require("./db");
 
 const { signup, login } = require("./auth");
+const cargoRoutes = require("./routes/cargo");
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 
 app.post("/signup", signup);
 app.post("/login", login);
+app.use("/api", cargoRoutes);
 
 app.use((req, res) => {
   return res.status(404).json({ message: "not found" });

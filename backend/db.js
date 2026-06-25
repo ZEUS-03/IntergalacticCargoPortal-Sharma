@@ -21,6 +21,15 @@ db.exec(`
     role TEXT NOT NULL CHECK(role IN ('admin', 'standard')),
     created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
   );
+
+  CREATE TABLE IF NOT EXISTS cargo (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cargo_id TEXT NOT NULL UNIQUE,
+    date TEXT NOT NULL,
+    weight_kg INTEGER NOT NULL,
+    destination TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+  );
 `);
 
 module.exports = db;
