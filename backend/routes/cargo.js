@@ -143,4 +143,18 @@ router.post(
   },
 );
 
+router.get("/cargo", authenticate, (req, res) => {
+  try {
+    const rows = db
+      .prepare(
+        "SELECT id, cargo_id, date, weight_kg, destination, created_at FROM cargo ORDER BY id ASC",
+      )
+      .all();
+    return res.status(200).json(rows);
+  } catch (error) {
+    console.error("cargo list failed:", error);
+    return res.status(500).json({ message: "internal server error" });
+  }
+});
+
 module.exports = router;
