@@ -11,6 +11,10 @@ function normalizeEmail(email) {
   return typeof email === "string" ? email.trim().toLowerCase() : "";
 }
 
+function getRoleForEmail(email) {
+  return email.endsWith("@nebula-corp.com") ? "admin" : "standard";
+}
+
 function signup(req, res) {
   try {
     const email = normalizeEmail(req.body?.email);
@@ -41,11 +45,12 @@ function signup(req, res) {
     }
 
     const passwordHash = bcrypt.hashSync(password, SALT_ROUNDS);
+    const role = getRoleForEmail(email);
 
     const insert = db.prepare(
       "INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)",
     );
-    const result = insert.run(email, passwordHash, "admin");
+    const result = insert.run(email, passwordHash, role);
 
     return res.status(201).json({
       userId: Number(result.lastInsertRowid),
